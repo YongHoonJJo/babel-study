@@ -154,10 +154,123 @@ module.exports = {
 
 #### @babel/core를 직접 실행하기
 
+@babel/cli 와 babel0loader 는 모두 @babel/core 를 이용해서 바벨을 실행하는 방식이다.
+
+<br>
+
+@babel/core 를 직접 사용하는 코드
+
+```js
+const babel = require('@babel/core')
+const fs = require('fs')
+
+const filename = './src/code.js'
+const source = fs.readFileSync(filename, 'utf8')
+const presets = ['@babel/preset-react']
+const plugins = [
+  '@babel/plugin-transform-template-literals',
+  '@babel/plugin-transform-arrow-functions'
+]
+
+const { code } = babel.transformSync(source, {
+  filename, presets, plugins, 
+  configFile: false
+})
+
+console.log(code)
+```
+
+> `source` 에는 컴파일 할 내용을 담는다.
+>
+> `babel.transformSync()` 를 통해 바벨을 실행
+>
+> `configFile: false` 옵션은 babel.config.js 설정 파일을 사용하지 않도록 한다.
+
+<br>
+
+```
+> node runBabel.js
+```
+
+> 위에서 실행했던 결과를 콘솔에서 확인할 수 있다.
+>
+> 파일로 저장하려면 fs 모듈을 이용하면 된다. 
+
+<br>
+
+##### AST 를 활용한 바벨 실행
+
+바벨은 컴파일 시 다음의 세 단계를 거친다. 
+
+```
+1. 파싱(parse) : 입력된 코드로부터 AST(abstract syntax tree) 를 생성한다.
+2. 변환(transform) : AST를 원하는 형태로 변환한다.
+3. 생성(generator) : AST를 코드로 출력한다.
+```
+
+> AST 는 코드의 syntax 가 분석된 결과를 담고 있는 구조체. 코드가 같다면 AST 도 동일하다.
+
+<br>
+
+```js
+/*** runBabel2.js ***/
+const babel = require('@babel/core')
+const fs = require('fs')
+
+const filename = './src/code.js'
+const source = fs.readFileSync(filename, 'utf8')
+const presets = ['@babel/preset-react']
+
+const { ast } = babel.transformSync(source, {
+  filename, 
+  ast: true,
+  code: false,
+  presets,
+  configFile: false
+})
 
 
+const { code: code1 } = babel.transformFromAstSync(ast, source, {
+  filename, 
+  plugins: ['@babel/plugin-transform-template-literals'],
+  configFile: false
+})
 
+const { code: code2 } = babel.transformFromAstSync(ast, source, {
+  filename, 
+  plugins: ['@babel/plugin-transform-arrow-functions'],
+  configFile: false
+})
+
+console.log({code1})
+console.log({code2})
+```
+
+> 적용하는 프리셋은 동일하기 때문에 AST 를 만들면서 해당 프리셋만 미리 적용시킨다
+>
+> 이렇게 만들어진 AST 로부터 각각의 플러그인을 적용시킨 코드를 생성한다.
+>
+> 이 방식은 설정의 개수가 많아질수록 효율이 높아진다.
+
+<br>
+
+실행결과
+
+```
+{ code1:
+   'const element = React.createElement("div", null, "babel test");\nconst etxt = "element type is ".concat(element.type);\n\nconst add = (a, b) => a + b;' }
+{ code2:
+   'const element = React.createElement("div", null, "babel test");\nconst etxt = `element type is ${element.type}`;\n\nconst add = function (a, b) {\n  return a + b;\n};' }
+```
+
+<br>
 
 #### @babel/register로 실행하기
 
 `@babel/register` 를 이용하면 Node.js 에서 require 코드가 실행될 때 동적으로 바벨이 실행되게 할 수 있다.
+
+<br>
+
+##### Reference
+
+<https://github.com/landvibe/book-react/tree/master/7-chapter/1-test-babel-how>
