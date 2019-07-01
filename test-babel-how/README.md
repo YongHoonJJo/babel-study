@@ -97,9 +97,60 @@ module.exports = { presets, plugins }
 
 #### 웹팩에서 babel-loader로 실행하기
 
+웹팩을 이용하기 위한 패키지 설치
+
+```
+> npm i webpack webpack-cli babel-loader
+```
 
 
 
+<br>
+
+웹팩 설정 파일
+
+```js
+/*** webpack.config.js ***/
+const path = require('path')
+
+module.exports = {
+  entry: './src/code.js',
+  output: {
+    path: path.resolve(__dirname, 'dist2'),
+    filename: 'code.bundle.js',
+  },
+  module: {
+    rules: [
+      { test: /\.js$/, use: 'babel-loader'}
+    ],
+  },
+  optimization: { minimizer: [] },
+}
+```
+
+> `entry` : 웹팩으로 번들링할 파일을 지정
+>
+> `output` : 번들링 된 결과를 dist2/code.bundle.js 파일로 저장
+>
+> `module` : js 파일을 babel-loader 가 처리하도록 설정. 
+>
+> babel-loader 는 바벨의 설정 파일인 babel.config.js 의 내용을 설정값으로 사용한다. 
+>
+> `optimization: { minimizer: [] }`  : 웹팩은 기본적으로 js 파일을 압축하지만, 테스트를 위해 압축 기능을 해제하는 옵션
+
+<br>
+
+웹팩 실행
+
+```
+> npx webpack
+```
+
+> dis2/code.bundle.js 파일이 생성된다.
+>
+> 파일의 내용은 웹팩의 런타임 코드 + 바벨이 생성한 코드로 구성되어 있다.
+
+<br>
 
 #### @babel/core를 직접 실행하기
 
